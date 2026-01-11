@@ -1,0 +1,38 @@
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  customerId      String?
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  customerAddress String?
+  orderDate       DateTime    @default(now())
+  expectedDate    DateTime?
+  completionDate  DateTime?
+  status          String      @default("pending")
+  totalAmount     Float       @default(0)
+  discount        Float       @default(0)
+  tax             Float       @default(0)
+  finalAmount     Float       @default(0)
+  paymentStatus   String      @default("unpaid")
+  paymentMethod   String?
+  notes           String?
+  orderItems      OrderItem[]
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+model OrderItem {
+  id          String   @id @default(uuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String?
+  productName String
+  productSku  String?
+  quantity    Int
+  unitPrice   Float
+  totalPrice  Float
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

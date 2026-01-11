@@ -1,0 +1,21 @@
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  sku         String   @unique
+  description String?
+  category    String
+  price       Float
+  costPrice   Float?
+  unit        String   @default("piece")
+  stock       Int      @default(0)
+  minStock    Int      @default(0)
+  supplier    String?
+  brand       String?
+  imageUrl    String?
+  status      String   @default("active") 
+  tags        String?  
+  specifications String? 
+  warranty    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
