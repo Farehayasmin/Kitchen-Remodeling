@@ -12,6 +12,6 @@ export const globalErrorHandler = (
   res.status(statusCode).json({
     success: false,
     message,
-    error: err,
+    error: process.env.NODE_ENV === 'development' ? err : undefined,
   });
 };
