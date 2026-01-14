@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { ProductService } from './product.service';
 
-// Get all products
+interface ProductParams {
+  id: string;
+}
+
 const getAllProducts = async (
   req: Request,
   res: Response,
@@ -9,21 +12,39 @@ const getAllProducts = async (
 ) => {
   try {
     const filters = req.query;
-    const result = await ProductService.getAllProducts(filters);
-    
+    const result = await ProductService.getAllProducts(filters as any);
+
     res.status(200).json({
       success: true,
       message: 'Products retrieved successfully',
-      data: result,
+      ...result,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get product by ID
-const getProductById = async (
+const searchProducts = async (
   req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const searchData = { ...req.body, ...req.query };
+    const result = await ProductService.searchProducts(searchData);
+
+    res.status(200).json({
+      success: true,
+      message: 'Search completed successfully',
+      ...result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getProductById = async (
+  req: Request<ProductParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -48,7 +69,6 @@ const getProductById = async (
   }
 };
 
-// Create product
 const createProduct = async (
   req: Request,
   res: Response,
@@ -56,7 +76,7 @@ const createProduct = async (
 ) => {
   try {
     const result = await ProductService.createProduct(req.body);
-    
+
     res.status(201).json({
       success: true,
       message: 'Product created successfully',
@@ -67,16 +87,15 @@ const createProduct = async (
   }
 };
 
-// Update product
 const updateProduct = async (
-  req: Request,
+  req: Request<ProductParams>,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { id } = req.params;
     const result = await ProductService.updateProduct(id, req.body);
-    
+
     res.status(200).json({
       success: true,
       message: 'Product updated successfully',
@@ -87,9 +106,8 @@ const updateProduct = async (
   }
 };
 
-// Update product status
 const updateProductStatus = async (
-  req: Request,
+  req: Request<ProductParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -105,7 +123,7 @@ const updateProductStatus = async (
     }
 
     const result = await ProductService.updateProductStatus(id, status);
-    
+
     res.status(200).json({
       success: true,
       message: 'Product status updated successfully',
@@ -116,16 +134,15 @@ const updateProductStatus = async (
   }
 };
 
-// Delete product
 const deleteProduct = async (
-  req: Request,
+  req: Request<ProductParams>,
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { id } = req.params;
     await ProductService.deleteProduct(id);
-    
+
     res.status(200).json({
       success: true,
       message: 'Product deleted successfully',
@@ -135,7 +152,6 @@ const deleteProduct = async (
   }
 };
 
-// Bulk upload products
 const bulkUploadProducts = async (
   req: Request,
   res: Response,
@@ -152,30 +168,10 @@ const bulkUploadProducts = async (
     }
 
     const result = await ProductService.bulkUploadProducts(products);
-    
+
     res.status(201).json({
       success: true,
       message: `${result.count} products uploaded successfully`,
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Search products
-const searchProducts = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const searchData = req.body;
-    const result = await ProductService.searchProducts(searchData);
-    
-    res.status(200).json({
-      success: true,
-      message: 'Search completed successfully',
       data: result,
     });
   } catch (error) {

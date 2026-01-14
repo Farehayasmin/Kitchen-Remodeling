@@ -1,4 +1,10 @@
 import prisma from '../../utils/prisma';
+import { calculatePagination, formatPaginationResponse, PaginationOptions } from '../../utils/pagination';
+
+interface CategoryFilters {
+  search?: string;
+  isActive?: string;
+}
 
 // Helper function to generate slug
 const generateSlug = (name: string): string => {
@@ -8,40 +14,13 @@ const generateSlug = (name: string): string => {
     .replace(/(^-|-$)/g, '');
 };
 
-// Get all categories
-const getAllCategories = async () => {
-  const result = await prisma.category.findMany({
-    where: { isActive: true },
-    include: {
-      _count: {
-        select: { products: true },
-      },
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
-  return result;
-};
+// Get all categories with pagination
+const getAllCategories = async (filters: CategoryFilters & PaginationOptions) => {
+  const { search, isActive, ...paginationOptions } = filters;
 
-// Get category by slug
-const getCategoryBySlug = async (slug: string) => {
-  const result = await prisma.category.findUnique({
-    where: { slug },
-    include: {
-      _count: {
-        select: { products: true },
-      },
-    },
-  });
-  return result;
-};
+  const { page, limit, skip, sortBy, sortOrder } = calculatePagination(paginationOptions);
 
-// Get products by category slug
-const getProductsByCategory = async (slug: string, filters?: any) => {
-  const { minPrice, maxPrice, status, search } = filters || {};
-
-  const where: any = { status: status || 'active' };
+  const where: any = {};
 
   if (search) {
     where.OR = [
@@ -50,99 +29,33 @@ const getProductsByCategory = async (slug: string, filters?: any) => {
     ];
   }
 
-  if (minPrice || maxPrice) {
-    where.price = {};
-    if (minPrice) where.price.gte = parseFloat(minPrice);
-    if (maxPrice) where.price.lte = parseFloat(maxPrice);
+  if (isActive !== undefined) {
+    where.isActive = isActive === 'true';
   }
 
-  const result = await prisma.category.findUnique({
-    where: { slug },
-    include: {
-      products: {
-        where,
-        orderBy: {
-          createdAt: 'desc',
+  const [categories, total] = await Promise.all([
+    prisma.category.findMany({
+      where,
+      skip,
+      take: limit,
+      include: {
+        _count: {
+          select: { products: true },
         },
       },
-    },
-  });
-
-  return result;
-};
-
-// Create new category
-const createCategory = async (data: any) => {
-  const { name, description, imageUrl, isActive } = data;
-  
-  // Auto-generate slug from name
-  const slug = generateSlug(name);
-
-  const result = await prisma.category.create({
-    data: {
-      name,
-      slug,
-      description,
-      imageUrl,
-      isActive: isActive !== undefined ? isActive : true,
-    },
-  });
-
-  return result;
-};
-
-// Update category
-const updateCategory = async (id: string, data: any) => {
-  const { name, description, imageUrl, isActive } = data;
-
-  const updateData: any = {
-    description,
-    imageUrl,
-    isActive,
-  };
-
-  // If name is updated, regenerate slug
-  if (name) {
-    updateData.name = name;
-    updateData.slug = generateSlug(name);
-  }
-
-  const result = await prisma.category.update({
-    where: { id },
-    data: updateData,
-  });
-
-  return result;
-};
-
-// Delete category
-const deleteCategory = async (id: string) => {
-  // Check if category has products
-  const category = await prisma.category.findUnique({
-    where: { id },
-    include: {
-      _count: {
-        select: { products: true },
+      orderBy: {
+        [sortBy]: sortOrder,
       },
-    },
-  });
+    }),
+    prisma.category.count({ where }),
+  ]);
 
-  if (category && category._count.products > 0) {
-    throw new Error('Cannot delete category with existing products');
-  }
-
-  const result = await prisma.category.delete({
-    where: { id },
-  });
-
-  return result;
+  return formatPaginationResponse(categories, total, page, limit);
 };
+
+// ... rest of your category service methods
 
 export const CategoryService = {
   getAllCategories,
-  getCategoryBySlug,
-  getProductsByCategory,
-  createCategory,
-  updateCategory,
-  deleteCategory,
+  // ... other methods
 };

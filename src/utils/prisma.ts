@@ -1,13 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Pool } from 'pg';
+import pg from 'pg';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const connectionString = process.env.DATABASE_URL;
 
-const pool = new Pool({ connectionString });
+const pool = new pg.Pool({ 
+    connectionString: connectionString 
+});
+
 const adapter = new PrismaPg(pool);
 
-// This prevents multiple instances of Prisma Client in development
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
 export const prisma =

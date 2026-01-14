@@ -1,21 +1,24 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg'; 
+import express, { Application } from 'express';
+import cors from 'cors';
+import routes from './routes';
+import { globalErrorHandler } from './middlewares/globalErrorHandler';
 
-const connectionString = process.env.DATABASE_URL;
+const app: Application = express();
 
-const pool = new pg.Pool({ connectionString });
-const adapter = new PrismaPg(pool);
+// Middlewares
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
+// Health check
+app.get('/', (req, res) => {
+  res.json({ message: 'Kitchen Remodeling API is running' });
+});
 
-export const prisma =
-  globalForPrisma.prisma ||
-  new PrismaClient({
-    adapter,
-   
-  });
+// Routes
+app.use('/api', routes);
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+// Global error handler
+app.use(globalErrorHandler);
 
-export default prisma;
+export default app;
