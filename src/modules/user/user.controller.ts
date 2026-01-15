@@ -1,6 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from './user.service';
 
+// Define params interfaces
+interface UserIdParams {
+  id: string;
+}
+
+interface UserEmailParams {
+  email: string;
+}
+
 // Get all users
 const getAllUsers = async (
   req: Request,
@@ -9,12 +18,12 @@ const getAllUsers = async (
 ) => {
   try {
     const filters = req.query;
-    const result = await UserService.getAllUsers(filters);
+    const result = await UserService.getAllUsers(filters as any);
 
     res.status(200).json({
       success: true,
       message: 'Users retrieved successfully',
-      data: result,
+      ...result,
     });
   } catch (error) {
     next(error);
@@ -23,7 +32,7 @@ const getAllUsers = async (
 
 // Get user by ID
 const getUserById = async (
-  req: Request,
+  req: Request<UserIdParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -50,7 +59,7 @@ const getUserById = async (
 
 // Get user by email
 const getUserByEmail = async (
-  req: Request,
+  req: Request<UserEmailParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -102,7 +111,7 @@ const createUser = async (
 
 // Update user
 const updateUser = async (
-  req: Request,
+  req: Request<UserIdParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -122,7 +131,7 @@ const updateUser = async (
 
 // Update user status
 const updateUserStatus = async (
-  req: Request,
+  req: Request<UserIdParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -151,7 +160,7 @@ const updateUserStatus = async (
 
 // Delete user
 const deleteUser = async (
-  req: Request,
+  req: Request<UserIdParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -204,7 +213,7 @@ const loginUser = async (
 
 // Change password
 const changePassword = async (
-  req: Request,
+  req: Request<UserIdParams>,
   res: Response,
   next: NextFunction
 ) => {

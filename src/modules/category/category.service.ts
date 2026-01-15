@@ -6,7 +6,6 @@ interface CategoryFilters {
   isActive?: string;
 }
 
-// Helper function to generate slug
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
@@ -14,10 +13,8 @@ const generateSlug = (name: string): string => {
     .replace(/(^-|-$)/g, '');
 };
 
-// Get all categories with pagination
 const getAllCategories = async (filters: CategoryFilters & PaginationOptions) => {
   const { search, isActive, ...paginationOptions } = filters;
-
   const { page, limit, skip, sortBy, sortOrder } = calculatePagination(paginationOptions);
 
   const where: any = {};
@@ -53,9 +50,63 @@ const getAllCategories = async (filters: CategoryFilters & PaginationOptions) =>
   return formatPaginationResponse(categories, total, page, limit);
 };
 
-// ... rest of your category service methods
+// --- ADDED MISSING FUNCTIONS BELOW ---
+
+const getCategoryBySlug = async (slug: string) => {
+  return await prisma.category.findUnique({
+    where: { slug },
+    include: { products: true },
+  });
+};
+
+const getProductsByCategory = async (slug: string, options: PaginationOptions) => {
+  const { limit, skip } = calculatePagination(options);
+  
+  // This finds the category and paginates the products inside it
+  return await prisma.category.findUnique({
+    where: { slug },
+    include: {
+      products: {
+        skip,
+        take: limit,
+      },
+      _count: {
+        select: { products: true }
+      }
+    }
+  });
+};
+
+const createCategory = async (payload: any) => {
+  if (payload.name && !payload.slug) {
+    payload.slug = generateSlug(payload.name);
+  }
+  return await prisma.category.create({
+    data: payload,
+  });
+};
+
+const updateCategory = async (id: string, payload: any) => {
+  if (payload.name) {
+    payload.slug = generateSlug(payload.name);
+  }
+  return await prisma.category.update({
+    where: { id },
+    data: payload,
+  });
+};
+
+const deleteCategory = async (id: string) => {
+  return await prisma.category.delete({
+    where: { id },
+  });
+};
 
 export const CategoryService = {
   getAllCategories,
-  // ... other methods
+  getCategoryBySlug,
+  getProductsByCategory,
+  createCategory,
+  updateCategory,
+  deleteCategory,
 };

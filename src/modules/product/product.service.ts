@@ -1,17 +1,7 @@
-import prisma from '../../utils/prisma';
-import { calculatePagination, formatPaginationResponse, PaginationOptions } from '../../utils/pagination';
+import { ProductFilters } from "../../types/product";
+import { calculatePagination, formatPaginationResponse, PaginationOptions } from "../../utils/pagination";
+import prisma from "../../utils/prisma";
 
-interface ProductFilters {
-  search?: string;
-  category?: string;
-  categoryId?: string;
-  status?: string;
-  minPrice?: string;
-  maxPrice?: string;
-  brand?: string;
-  supplier?: string;
-  inStock?: string;
-}
 
 
 const getAllProducts = async (filters: ProductFilters & PaginationOptions) => {
@@ -91,50 +81,50 @@ const getAllProducts = async (filters: ProductFilters & PaginationOptions) => {
 const searchProducts = async (searchData: any) => {
   const { query, filters, ...paginationOptions } = searchData;
 
-  const { page, limit, skip, sortBy, sortOrder } = calculatePagination(paginationOptions);
+ const { page, limit, skip, sortBy, sortOrder } = calculatePagination(paginationOptions);
 
-  const where: any = {};
+   const where: any = {};
 
 
   if (query) {
     where.OR = [
-      { name: { contains: query, mode: 'insensitive' } },
-      { sku: { contains: query, mode: 'insensitive' } },
-      { description: { contains: query, mode: 'insensitive' } },
-      { brand: { contains: query, mode: 'insensitive' } },
-    ];
-  }
+       { name: { contains: query, mode: 'insensitive' } },
+       { sku: { contains: query, mode: 'insensitive' } },
+       { description: { contains: query, mode: 'insensitive' } },
+       { brand: { contains: query, mode: 'insensitive' } },
+     ];
+   }
 
-  if (filters) {
-    if (filters.category) where.category = filters.category;
-    if (filters.status) where.status = filters.status;
-    if (filters.brand) where.brand = filters.brand;
+   if (filters) {
+     if (filters.category) where.category = filters.category;
+     if (filters.status) where.status = filters.status;
+     if (filters.brand) where.brand = filters.brand;
     
-    if (filters.priceRange) {
-      where.price = {};
-      if (filters.priceRange.min) where.price.gte = filters.priceRange.min;
-      if (filters.priceRange.max) where.price.lte = filters.priceRange.max;
-    }
+     if (filters.priceRange) {
+       where.price = {};
+       if (filters.priceRange.min) where.price.gte = filters.priceRange.min;
+       if (filters.priceRange.max) where.price.lte = filters.priceRange.max;
+     }
 
-    if (filters.stockRange) {
-      where.stock = {};
-      if (filters.stockRange.min !== undefined) where.stock.gte = filters.stockRange.min;
-      if (filters.stockRange.max !== undefined) where.stock.lte = filters.stockRange.max;
-    }
-  }
+     if (filters.stockRange) {
+       where.stock = {};
+       if (filters.stockRange.min !== undefined) where.stock.gte = filters.stockRange.min;
+       if (filters.stockRange.max !== undefined) where.stock.lte = filters.stockRange.max;
+     }
+   }
 
-  const [results, total] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: { [sortBy]: sortOrder },
-    }),
+   const [results, total] = await Promise.all([
+     prisma.product.findMany({
+       where,
+       skip,
+       take: limit,
+       orderBy: { [sortBy]: sortOrder },
+     }),
     prisma.product.count({ where }),
-  ]);
+   ]);
 
-  return formatPaginationResponse(results, total, page, limit);
-};
+   return formatPaginationResponse(results, total, page, limit);
+ };
 
 
 const getProductById = async (id: string) => {

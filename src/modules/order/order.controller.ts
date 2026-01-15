@@ -1,7 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { OrderService } from './order.service';
 
-// Get all orders
+interface OrderIdParams {
+  id: string;
+}
+
+interface OrderNumberParams {
+  orderNumber: string;
+}
+
+interface CustomerEmailParams {
+  email: string;
+}
+
+
 const getAllOrders = async (
   req: Request,
   res: Response,
@@ -9,26 +21,25 @@ const getAllOrders = async (
 ) => {
   try {
     const filters = req.query;
-    const result = await OrderService.getAllOrders(filters);
+    const result = await OrderService.getAllOrders(filters as any);
 
     res.status(200).json({
       success: true,
       message: 'Orders retrieved successfully',
-      data: result,
+      ...result,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get order by ID
 const getOrderById = async (
-  req: Request,
+  req: Request<OrderIdParams>, 
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; 
     const result = await OrderService.getOrderById(id);
 
     if (!result) {
@@ -48,9 +59,8 @@ const getOrderById = async (
   }
 };
 
-// Get order by order number
 const getOrderByOrderNumber = async (
-  req: Request,
+  req: Request<OrderNumberParams>, 
   res: Response,
   next: NextFunction
 ) => {
@@ -75,7 +85,6 @@ const getOrderByOrderNumber = async (
   }
 };
 
-// Create order
 const createOrder = async (
   req: Request,
   res: Response,
@@ -94,9 +103,8 @@ const createOrder = async (
   }
 };
 
-// Update order
 const updateOrder = async (
-  req: Request,
+  req: Request<OrderIdParams>, 
   res: Response,
   next: NextFunction
 ) => {
@@ -114,9 +122,8 @@ const updateOrder = async (
   }
 };
 
-// Update order status
 const updateOrderStatus = async (
-  req: Request,
+  req: Request<OrderIdParams>, 
   res: Response,
   next: NextFunction
 ) => {
@@ -143,9 +150,8 @@ const updateOrderStatus = async (
   }
 };
 
-// Update payment status
 const updatePaymentStatus = async (
-  req: Request,
+  req: Request<OrderIdParams>, // Applied here
   res: Response,
   next: NextFunction
 ) => {
@@ -172,9 +178,8 @@ const updatePaymentStatus = async (
   }
 };
 
-// Delete order
 const deleteOrder = async (
-  req: Request,
+  req: Request<OrderIdParams>,
   res: Response,
   next: NextFunction
 ) => {
@@ -191,27 +196,26 @@ const deleteOrder = async (
   }
 };
 
-// Get customer orders
 const getCustomerOrders = async (
-  req: Request,
+  req: Request<CustomerEmailParams>, // Applied here
   res: Response,
   next: NextFunction
 ) => {
   try {
     const { email } = req.params;
-    const result = await OrderService.getCustomerOrders(email);
+    const paginationOptions = req.query;
+    const result = await OrderService.getCustomerOrders(email, paginationOptions as any);
 
     res.status(200).json({
       success: true,
       message: 'Customer orders retrieved successfully',
-      data: result,
+      ...result,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// Get order statistics
 const getOrderStatistics = async (
   req: Request,
   res: Response,

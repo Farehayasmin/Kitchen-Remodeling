@@ -1,4 +1,6 @@
+import { config } from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
+import Config from '../config';
 
 export const globalErrorHandler = (
   err: any,
@@ -12,6 +14,6 @@ export const globalErrorHandler = (
   res.status(statusCode).json({
     success: false,
     message,
-    error: process.env.NODE_ENV === 'development' ? err : undefined,
+    error:Config.node_env === 'development' ? err : undefined,
   });
 };

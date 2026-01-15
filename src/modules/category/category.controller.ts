@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { CategoryService } from './category.service';
 
-// Get all categories
 const getAllCategories = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    const result = await CategoryService.getAllCategories();
+    
+    const result = await CategoryService.getAllCategories(req.query as any);
 
     res.status(200).json({
       success: true,
@@ -20,14 +20,12 @@ const getAllCategories = async (
   }
 };
 
-// Get category by slug
 const getCategoryBySlug = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // FIX: Explicitly cast slug as string to avoid the 'string | string[]' error
     const slug = req.params.slug as string; 
     const result = await CategoryService.getCategoryBySlug(slug);
 
@@ -48,17 +46,15 @@ const getCategoryBySlug = async (
   }
 };
 
-// Get products by category
 const getProductsByCategory = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // FIX: Cast slug as string
     const slug = req.params.slug as string;
     const filters = req.query;
-    const result = await CategoryService.getProductsByCategory(slug, filters);
+    const result = await CategoryService.getProductsByCategory(slug, filters as any);
 
     if (!result) {
       return res.status(404).json({
@@ -77,7 +73,6 @@ const getProductsByCategory = async (
   }
 };
 
-// Create category
 const createCategory = async (
   req: Request,
   res: Response,
@@ -96,14 +91,12 @@ const createCategory = async (
   }
 };
 
-// Update category
 const updateCategory = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // FIX: Cast id as string
     const id = req.params.id as string;
     const result = await CategoryService.updateCategory(id, req.body);
 
@@ -117,14 +110,12 @@ const updateCategory = async (
   }
 };
 
-// Delete category
 const deleteCategory = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // FIX: Cast id as string
     const id = req.params.id as string;
     await CategoryService.deleteCategory(id);
 
@@ -138,10 +129,10 @@ const deleteCategory = async (
 };
 
 export const CategoryController = {
+  createCategory,
   getAllCategories,
   getCategoryBySlug,
-  getProductsByCategory,
-  createCategory,
+  getProductsByCategory, 
   updateCategory,
   deleteCategory,
 };
