@@ -1,8 +1,8 @@
 
 
 import app from './app';
-import Config from './config';
-import prisma from './utils/prisma';
+import Config from './app/config';
+import prisma from './app/utils/prisma';
 
 
 

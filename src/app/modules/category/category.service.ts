@@ -1,33 +1,50 @@
-import prisma from '../../utils/prisma';
-import { calculatePagination, formatPaginationResponse, PaginationOptions } from '../../utils/pagination';
+// src/modules/category/category.service.ts
 
-interface CategoryFilters {
-  search?: string;
-  isActive?: string;
-}
+import { prisma } from '../../shared/prisma';
+import { CategoryFilters, CreateCategoryInput, UpdateCategoryInput } from './category.types';
+
 
 const generateSlug = (name: string): string => {
   return name
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '');
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 };
 
-const getAllCategories = async (filters: CategoryFilters & PaginationOptions) => {
-  const { search, isActive, ...paginationOptions } = filters;
-  const { page, limit, skip, sortBy, sortOrder } = calculatePagination(paginationOptions);
+// CREATE
+export const createCategory = async (data: CreateCategoryInput) => {
+  const slug = data.slug || generateSlug(data.name);
+  
+  return await prisma.category.create({
+    data: {
+      ...data,
+      slug,
+    },
+  });
+};
+
+// GET ALL
+export const getAllCategories = async (filters: CategoryFilters) => {
+  const { search, isActive, parentId, page = 1, limit = 10 } = filters;
+  const skip = (page - 1) * limit;
 
   const where: any = {};
-
+  
   if (search) {
     where.OR = [
       { name: { contains: search, mode: 'insensitive' } },
       { description: { contains: search, mode: 'insensitive' } },
     ];
   }
-
+  
   if (isActive !== undefined) {
-    where.isActive = isActive === 'true';
+    where.isActive = isActive;
+  }
+  
+  if (parentId) {
+    where.parentId = parentId;
   }
 
   const [categories, total] = await Promise.all([
@@ -35,78 +52,55 @@ const getAllCategories = async (filters: CategoryFilters & PaginationOptions) =>
       where,
       skip,
       take: limit,
+      orderBy: { createdAt: 'desc' },
       include: {
-        _count: {
-          select: { products: true },
-        },
-      },
-      orderBy: {
-        [sortBy]: sortOrder,
+        parent: true,
+        children: true,
       },
     }),
     prisma.category.count({ where }),
   ]);
 
-  return formatPaginationResponse(categories, total, page, limit);
+  return { categories, total, page, limit };
 };
 
-// --- ADDED MISSING FUNCTIONS BELOW ---
-
-const getCategoryBySlug = async (slug: string) => {
+// GET BY ID
+export const getCategoryById = async (id: string) => {
   return await prisma.category.findUnique({
-    where: { slug },
-    include: { products: true },
+    where: { id },
+    include: {
+      parent: true,
+      children: true,
+    },
   });
 };
 
-const getProductsByCategory = async (slug: string, options: PaginationOptions) => {
-  const { limit, skip } = calculatePagination(options);
-  
-  // This finds the category and paginates the products inside it
+// GET BY SLUG
+export const getCategoryBySlug = async (slug: string) => {
   return await prisma.category.findUnique({
     where: { slug },
     include: {
-      products: {
-        skip,
-        take: limit,
-      },
-      _count: {
-        select: { products: true }
-      }
-    }
+      parent: true,
+      children: true,
+    },
   });
 };
 
-const createCategory = async (payload: any) => {
-  if (payload.name && !payload.slug) {
-    payload.slug = generateSlug(payload.name);
+// UPDATE
+export const updateCategory = async (id: string, data: UpdateCategoryInput) => {
+  if (data.name && !data.slug) {
+    data.slug = generateSlug(data.name);
   }
-  return await prisma.category.create({
-    data: payload,
-  });
-};
-
-const updateCategory = async (id: string, payload: any) => {
-  if (payload.name) {
-    payload.slug = generateSlug(payload.name);
-  }
+  
   return await prisma.category.update({
     where: { id },
-    data: payload,
+    data,
   });
 };
 
-const deleteCategory = async (id: string) => {
+// DELETE
+export const deleteCategory = async (id: string) => {
   return await prisma.category.delete({
     where: { id },
   });
-};
-
-export const CategoryService = {
-  getAllCategories,
-  getCategoryBySlug,
-  getProductsByCategory,
-  createCategory,
-  updateCategory,
-  deleteCategory,
 };

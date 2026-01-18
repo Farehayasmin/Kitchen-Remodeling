@@ -1,21 +1,15 @@
+// src/modules/category/category.routes.ts
+
 import { Router } from 'express';
-import { CategoryController } from './category.controller';
+import * as categoryController from './category.controller';
 
 const router = Router();
 
-router.get('/', CategoryController.getAllCategories);
+router.post('/', categoryController.createCategory);
+router.get('/', categoryController.getAllCategories);
+router.get('/:id', categoryController.getCategoryById);
+router.get('/slug/:slug', categoryController.getCategoryBySlug);
+router.put('/:id', categoryController.updateCategory);
+router.delete('/:id', categoryController.deleteCategory);
 
-
-router.get('/:slug/products', CategoryController.getProductsByCategory);
-
-router.get('/:slug', CategoryController.getCategoryBySlug);
-
-
-router.post('/', CategoryController.createCategory);
-
-router.put('/:id', CategoryController.updateCategory);
-
-
-router.delete('/:id', CategoryController.deleteCategory);
-
-export const categoryRoutes = router;
+export default router;

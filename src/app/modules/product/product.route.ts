@@ -5,25 +5,14 @@ const router = Router();
 
 
 router.get('/', ProductController.getAllProducts);
-
-
-router.get('/:id', ProductController.getProductById);
-
-
-router.post('/', ProductController.createProduct);
-
-
-router.put('/:id', ProductController.updateProduct);
-
-
-router.patch('/:id/status', ProductController.updateProductStatus);
-
-
-router.delete('/:id', ProductController.deleteProduct);
-
+router.post('/search', ProductController.searchProducts);
 router.post('/bulk-upload', ProductController.bulkUploadProducts);
 
 
-router.post('/search', ProductController.searchProducts);
+router.get('/:id', ProductController.getProductById);
+router.post('/', ProductController.createProduct);
+router.put('/:id', ProductController.updateProduct);
+router.patch('/:id/status', ProductController.updateProductStatus);
+router.delete('/:id', ProductController.deleteProduct);
 
-export const productRoutes = router;
+export const productRoutes = router; 

@@ -10,6 +10,7 @@ const files = [
   'user.prisma',
   'product.prisma',
   'order.prisma',
+  'brand.prisma',
   
  
 ];
